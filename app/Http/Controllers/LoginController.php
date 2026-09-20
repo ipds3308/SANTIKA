@@ -24,7 +24,7 @@ class LoginController extends Controller
         // Jika email & password cocok dengan database
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended('/admin'); // Arahkan ke dashboard
+            return redirect()->intended(route('dashboard', absolute: false));
         }
 
         // Jika salah, kembalikan ke form login dengan pesan error
@@ -39,6 +39,6 @@ class LoginController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/login');
+        return redirect('/');
     }
 }

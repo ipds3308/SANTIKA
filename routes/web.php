@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\UserController;
@@ -78,11 +77,9 @@ Route::middleware(['auth'])->group(function () {
 // ==========================================
 // 4. BAWAAN LARAVEL (Inertia & Settings)
 // ==========================================
-Route::get('dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('dashboard', [RegistrationController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 require __DIR__.'/settings.php';
-
-// BARIS DI BAWAH INI DIMATIKAN AGAR TIDAK BENTROK DENGAN LOGIN KITA
-#require __DIR__.'/auth.php';
+require __DIR__.'/auth.php';
