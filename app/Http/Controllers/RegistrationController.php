@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Models\Registration;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\AntrianMail;
 use Illuminate\Support\Facades\DB;
@@ -488,7 +489,12 @@ class RegistrationController extends Controller
             ->orderBy('nomor_urut', 'asc')
             ->get();
         $filename = "Laporan_Rekap_BPS_" . ($bulan ?? $tanggal) . ".xls";
-        $nama_petugas = Auth::user()->name;
+        $logoBpsUrl = 'https://commons.wikimedia.org/wiki/Special:FilePath/Lambang%20Badan%20Pusat%20Statistik%20%28BPS%29%20Indonesia.svg?width=960';
+        $logoBpsResponse = Http::withUserAgent('Mozilla/5.0')->timeout(15)->get($logoBpsUrl);
+        $logoBpsData = $logoBpsResponse->successful() && str_starts_with((string) $logoBpsResponse->header('Content-Type'), 'image/')
+            ? 'data:image/png;base64,' . base64_encode($logoBpsResponse->body())
+            : $logoBpsUrl;
+        $logoSantikaData = 'data:image/png;base64,' . base64_encode(file_get_contents(base_path('app/asset/LOGO SANTIKA HITAM.png')));
 
         header("Content-Type: application/vnd.ms-excel");
         header("Content-Disposition: attachment; filename=\"$filename\"");
@@ -496,18 +502,22 @@ class RegistrationController extends Controller
         echo '<html xmlns:x="urn:schemas-microsoft-com:office:excel">';
         echo '<head><meta charset="utf-8"></head>';
         echo '<body style="font-family: Arial, sans-serif;">';
-        echo '<table border="0" style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
-                <tr>
-                    <td style="width: 15%; text-align: right; vertical-align: middle; padding-right: 15px;"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Lambang_Badan_Pusat_Statistik_%28BPS%29_Indonesia.svg/960px-Lambang_Badan_Pusat_Statistik_%28BPS%29_Indonesia.svg.png" style="height: 50px; width: auto;" alt="Logo BPS Kiri"></td>
-                    <td style="width: 70%; text-align: center; vertical-align: middle;">
-                        <div style="font-size: 18pt; font-weight: bold; line-height: 1.2;">SANTIKA</div>
-                        <div style="font-size: 11pt; font-weight: bold; line-height: 1.2;">BADAN PUSAT STATISTIK KABUPATEN MAGELANG</div>
-                        <div style="font-size: 8.5pt; font-weight: normal; line-height: 1.2;">Jl. Soekarno-Hatta No. 4 Kota Mungkid, Kabupaten Magelang</div>
-                    </td>
-                    <td style="width: 15%; text-align: left; vertical-align: middle; padding-left: 15px;"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Lambang_Badan Pusat Statistik_%28BPS%29_Indonesia.svg/960px-Lambang_Badan_Pusat_Statistik_%28BPS%29_Indonesia.svg.png" style="height: 50px; width: auto;" alt="Logo BPS Kanan"></td>
+        echo '<table border="0" style="width: 100%; table-layout: fixed; border-collapse: collapse; margin-bottom: 10px;">
+                <colgroup>
+                    <col style="width: 12.5%;"><col style="width: 12.5%;"><col style="width: 12.5%;"><col style="width: 12.5%;">
+                    <col style="width: 12.5%;"><col style="width: 12.5%;"><col style="width: 12.5%;"><col style="width: 12.5%;">
+                </colgroup>
+                <tr style="height: 86px;">
+                    <td align="left" valign="middle" style="vertical-align: middle; padding-left: 8px;"><img id="logo-bps-a1" data-anchor-cell="A1" src="' . $logoBpsData . '" width="80" height="62" alt="Logo BPS Kiri"></td>
+                    <td colspan="6"></td>
+                    <td align="right" valign="middle" style="vertical-align: middle; padding-right: 8px;"><img id="logo-santika-h1" data-anchor-cell="H1" src="' . $logoSantikaData . '" width="80" height="80" alt="Logo SANTIKA Kanan"></td>
                 </tr>
-                <tr><td colspan="3" style="text-align: center; font-size: 11pt;">' . $labelPeriode . ' | Diekspor Oleh: ' . $nama_petugas . '</td></tr>
-                <tr><td colspan="8"></td></tr>
+                <tr style="height: 38px;"><td colspan="8" align="center" style="text-align: center; vertical-align: middle; font-size: 18pt; font-weight: bold; line-height: 1.2;">SANTIKA</td></tr>
+                <tr style="height: 28px;"><td colspan="8" align="center" style="text-align: center; vertical-align: middle; font-size: 11pt; font-weight: bold; line-height: 1.2;">BADAN PUSAT STATISTIK KABUPATEN MAGELANG</td></tr>
+                <tr style="height: 24px;"><td colspan="8" align="center" style="text-align: center; vertical-align: middle; font-size: 8.5pt; line-height: 1.2;">Jl. Soekarno-Hatta No. 4 Kota Mungkid, Kabupaten Magelang</td></tr>
+                <tr style="height: 4px;"><td colspan="8" style="border-top: 3px solid #000; border-bottom: 1px solid #000;"></td></tr>
+                <tr style="height: 28px;"><td colspan="8" align="center" style="text-align: center; vertical-align: middle; font-size: 12pt; font-weight: bold; text-decoration: underline; padding-top: 8px;">LAPORAN REKAPITULASI ANTRIAN LAYANAN</td></tr>
+                <tr style="height: 22px;"><td colspan="8" style="text-align: left; vertical-align: middle; font-size: 11pt; padding-bottom: 8px;">Periode: ' . $labelPeriode . '</td></tr>
               </table>';
 
         echo '<table border="1" style="width: 100%; border-collapse: collapse;">
@@ -543,7 +553,7 @@ class RegistrationController extends Controller
                         Magelang, ' . Carbon::now()->translatedFormat('d F Y') . '<br>
                         Mengetahui,<br>
                         <b>Petugas Pelayanan SANTIKA</b><br><br><br>
-                        <b><u>( ' . strtoupper($nama_petugas) . ' )</u></b>
+                        <b><u>(....................................)</u></b>
                     </td>
                 </tr>
             </table>
@@ -584,7 +594,8 @@ class RegistrationController extends Controller
             ->orderBy('nomor_urut', 'asc')
             ->get();
         $filename = "Laporan_Rekap_BPS_" . ($bulan ?? $tanggal) . ".doc";
-        $nama_petugas = Auth::user()->name;
+        $logoBpsUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Lambang_Badan_Pusat_Statistik_%28BPS%29_Indonesia.svg/960px-Lambang_Badan_Pusat_Statistik_%28BPS%29_Indonesia.svg.png';
+        $logoSantikaUrl = route('assets.santika-logo-hitam');
 
         header("Content-type: application/vnd.ms-word");
         header("Content-Disposition: attachment;Filename=\"$filename\"");
@@ -607,8 +618,8 @@ class RegistrationController extends Controller
         <body>
             <table class="kop-surat" style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
                 <tr>
-                    <td style="width: 15%; text-align: right; vertical-align: middle; padding-right: 15px;">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Lambang_Badan_Pusat_Statistik_%28BPS%29_Indonesia.svg/960px-Lambang_Badan_Pusat_Statistik_%28BPS%29_Indonesia.svg.png" style="height: 50px; width: auto;" alt="Logo BPS Kiri">
+                    <td style="width: 15%; text-align: right; vertical-align: middle; padding-right: 22px;">
+                        <img src="' . $logoBpsUrl . '" width="42" height="42" style="width: 42px; height: 42px;" alt="Logo BPS Kiri">
                     </td>
                     <td style="width: 70%; text-align: center; vertical-align: middle;">
                         <div style="font-size: 18pt; font-weight: bold; line-height: 1.2;">SANTIKA</div>
@@ -616,13 +627,13 @@ class RegistrationController extends Controller
                         <div style="font-size: 8.5pt; font-weight: normal; line-height: 1.2;">Jl. Soekarno-Hatta No. 4 Kota Mungkid, Kabupaten Magelang</div>
                     </td>
                     <td style="width: 15%; text-align: left; vertical-align: middle; padding-left: 15px;">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Lambang_Badan_Pusat_Statistik_%28BPS%29_Indonesia.svg/960px-Lambang_Badan_Pusat_Statistik_%28BPS%29_Indonesia.svg.png" style="height: 50px; width: auto;" alt="Logo BPS Kanan">
+                        <img src="' . $logoSantikaUrl . '" width="42" height="42" style="width: 42px; height: 42px;" alt="Logo SANTIKA Kanan">
                     </td>
                 </tr>
             </table>
             <div class="garis-ganda"></div>
             <div style="text-align: center; font-weight: bold; margin-bottom: 10px; text-decoration: underline;">LAPORAN REKAPITULASI ANTRIAN LAYANAN</div>
-            <p style="margin-bottom: 10px;">Periode: ' . $labelPeriode . '<br>Dicetak Oleh: ' . $nama_petugas . '</p>
+            <p style="margin-bottom: 10px;">Periode: ' . $labelPeriode . '</p>
 
             <table class="tabel-data">
                 <thead>
@@ -659,7 +670,7 @@ class RegistrationController extends Controller
                     <td width="65%"></td>
                     <td width="35%" class="text-center">
                         <p>Magelang, ' . Carbon::now()->translatedFormat('d F Y') . '<br>Mengetahui,<br><b>Petugas Pelayanan SANTIKA</b></p>
-                        <br><br><br><p><b><u>( ' . strtoupper($nama_petugas) . ' )</u></b></p>
+                        <br><br><br><p><b><u>(....................................)</u></b></p>
                     </td>
                 </tr>
             </table>

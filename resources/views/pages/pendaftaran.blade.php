@@ -122,7 +122,7 @@
         flex-direction: column;
         align-items: stretch;
         min-height: 0;
-        animation: news-fade-in 0.6s ease;
+        animation: news-fade-in 2s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .news-ticker-item.is-active {
@@ -207,8 +207,14 @@
     }
 
     @keyframes news-fade-in {
-        from { opacity: 0; transform: translateY(5px); }
+        from { opacity: 0; transform: translateY(8px); }
         to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .news-ticker-item {
+            animation: none;
+        }
     }
 </style>
 
@@ -612,6 +618,7 @@
         const nextButton = document.getElementById('newsNext');
         let tickerItems = [];
         let activeIndex = 0;
+        let newsSignature = '';
 
         function showNews(index) {
             if (tickerItems.length === 0) return;
@@ -626,10 +633,21 @@
                 if (tickerItems.length > 1) {
                     showNews(activeIndex + 1);
                 }
-            }, 3000);
+            }, 5000);
         }
 
         function renderNews(items) {
+            const nextSignature = JSON.stringify(items.map(item => ({
+                url: item.url,
+                title: item.title,
+                image_url: item.image_url || '',
+            })));
+
+            if (nextSignature === newsSignature) {
+                return;
+            }
+
+            newsSignature = nextSignature;
             tickerItems.forEach(item => item.remove());
             tickerItems = items.map(item => {
                 const link = document.createElement('a');
