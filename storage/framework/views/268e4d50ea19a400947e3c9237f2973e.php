@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'Form Pengambilan Antrian - SANTIKA BPS'); ?>
 
 <?php $__env->startSection('content'); ?>
