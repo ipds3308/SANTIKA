@@ -1,11 +1,14 @@
 <?php
 
-use Carbon\Carbon;
+use App\Http\Controllers\RegistrationController;
 use App\Models\Registration;
+use App\Models\User;
+use App\Services\IndonesianPublicHolidayCalendar;
+use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
@@ -171,4 +174,82 @@ test('renders the custom calendar and its available holiday data', function () {
         ->toContain('sha384-nLoOnA/BDh8A/jxqtckg4DumuCGOBYUnNJLZdQz/zfYNp3wcjGSoWTAzgko06G/2')
         ->toContain('2030-01-02')
         ->toContain('Libur Nasional');
+});
+
+test('renders the dashboard with public holiday calendar data', function () {
+    Cache::flush();
+    Http::fake([
+        'calendar.google.com/*' => Http::response(implode("\r\n", [
+            'BEGIN:VCALENDAR',
+            'BEGIN:VEVENT',
+            'DTSTART;VALUE=DATE:20300102',
+            'DTEND;VALUE=DATE:20300103',
+            'SUMMARY:Libur Nasional',
+            'STATUS:CONFIRMED',
+            'END:VEVENT',
+            'END:VCALENDAR',
+        ])),
+    ]);
+
+    $this->actingAs(User::factory()->create(['role' => 'admin']));
+
+    $response = app()->call(
+        [app(RegistrationController::class), 'index'],
+        ['request' => Request::create('/admin')],
+    );
+
+    expect($response->getStatusCode())->toBe(200)
+        ->and($response->getContent())->toContain('data-dashboard-date-picker')
+        ->and($response->getContent())->toContain('2030-01-02')
+        ->and($response->getContent())->toContain('Libur Nasional')
+        ->and($response->getContent())->not->toContain('Kalender hari libur nasional tidak dapat dimuat saat ini.');
+});
+
+test('opens the waiting room with today selected and holiday data available', function () {
+    Cache::flush();
+    Http::fake([
+        'calendar.google.com/*' => Http::response("BEGIN:VCALENDAR\r\nEND:VCALENDAR"),
+    ]);
+    $this->actingAs(User::factory()->create(['role' => 'admin']));
+
+    $response = app(RegistrationController::class)->ruangTunggu(
+        app(IndonesianPublicHolidayCalendar::class),
+    );
+    $html = $response->render();
+
+    expect($html)
+        ->toContain('value="'.Carbon::now('Asia/Jakarta')->format('Y-m-d').'"')
+        ->toContain('waitingRoomHolidays')
+        ->not->toContain('Kalender hari libur nasional tidak dapat dimuat saat ini.');
+});
+
+test('returns waiting-room data for the date selected in the date picker', function () {
+    Registration::create([
+        'nama' => 'Pemohon Terpilih',
+        'email' => 'terpilih@example.com',
+        'no_wa' => '081234567890',
+        'tanggal' => '2026-10-27',
+        'tanggal_kunjungan' => '2026-10-29',
+        'nomor_urut' => 1,
+        'nomor_antrian' => 'A-291026-001',
+        'status' => 'Menunggu',
+    ]);
+    Registration::create([
+        'nama' => 'Pemohon Tanggal Lain',
+        'email' => 'tanggal-lain@example.com',
+        'no_wa' => '081234567891',
+        'tanggal' => '2026-10-27',
+        'tanggal_kunjungan' => '2026-10-30',
+        'nomor_urut' => 1,
+        'nomor_antrian' => 'A-301026-001',
+        'status' => 'Menunggu',
+    ]);
+
+    $response = app(RegistrationController::class)->apiRuangTunggu(
+        Request::create('/api/ruang-tunggu-data', 'GET', ['tanggal' => '2026-10-29']),
+    );
+
+    expect($response->getData(true)['menunggu'])
+        ->toHaveCount(1)
+        ->and($response->getData(true)['menunggu'][0]['nama'])->toBe('Pemohon Terpilih');
 });

@@ -238,7 +238,7 @@ class RegistrationController extends Controller
         return view('pages.cetak', compact('data'));
     }
 
-    public function index(Request $request)
+    public function index(Request $request, IndonesianPublicHolidayCalendar $holidayCalendar)
     {
         $request->validate([
             'tanggal' => 'nullable|date',
@@ -247,6 +247,7 @@ class RegistrationController extends Controller
             'sort' => 'nullable|in:created_at,nomor_antrian,nama',
         ]);
 
+        $calendar = $holidayCalendar->calendar();
         $tanggal = $request->input('tanggal');
         $bulan = $request->input('bulan');
         $jenisLayanan = $request->input('jenis_layanan');
@@ -305,6 +306,8 @@ class RegistrationController extends Controller
             'jenisLayanan' => $jenisLayanan,
             'sort' => $sort,
             'berita' => NewsItem::orderBy('position')->get(),
+            'publicHolidays' => $calendar['holidays'],
+            'holidayCalendarAvailable' => $calendar['available'],
         ])
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->header('Pragma', 'no-cache')
@@ -398,28 +401,37 @@ class RegistrationController extends Controller
     // FITUR RUANG TUNGGU & PANGGIL OTOMATIS
     // -----------------------------------------------------------------
 
-    public function ruangTunggu()
+    public function ruangTunggu(IndonesianPublicHolidayCalendar $holidayCalendar)
     {
-        return view('pages.ruang_tunggu');
+        $calendar = $holidayCalendar->calendar();
+
+        return view('pages.ruang_tunggu', [
+            'selectedDate' => Carbon::now('Asia/Jakarta')->format('Y-m-d'),
+            'publicHolidays' => $calendar['holidays'],
+            'holidayCalendarAvailable' => $calendar['available'],
+        ]);
     }
 
-    public function apiRuangTunggu()
+    public function apiRuangTunggu(Request $request)
     {
-        $today = Carbon::now('Asia/Jakarta')->format('Y-m-d');
+        $validated = $request->validate([
+            'tanggal' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+        $selectedDate = $validated['tanggal'] ?? Carbon::now('Asia/Jakarta')->format('Y-m-d');
 
-        $sedangDipanggil = Registration::where('tanggal_kunjungan', $today)
+        $sedangDipanggil = Registration::where('tanggal_kunjungan', $selectedDate)
             ->where('status', 'Dipanggil')
             ->latest('updated_at')
             ->first();
 
-        $antrianMenunggu = Registration::where('tanggal_kunjungan', $today)
+        $antrianMenunggu = Registration::where('tanggal_kunjungan', $selectedDate)
             ->where('status', 'Menunggu')
             ->orderBy('nomor_urut', 'asc')
             ->take(5)
             ->get();
 
-        $selesai = collect(self::SERVICE_PREFIXES)->mapWithKeys(function (string $prefix, string $jenisLayanan) use ($today): array {
-            $query = Registration::where('tanggal_kunjungan', $today)
+        $selesai = collect(self::SERVICE_PREFIXES)->mapWithKeys(function (string $prefix, string $jenisLayanan) use ($selectedDate): array {
+            $query = Registration::where('tanggal_kunjungan', $selectedDate)
                 ->where('status', 'Selesai')
                 ->when($jenisLayanan === 'Lainnya', function (Builder $query): void {
                     $query->where(function (Builder $query): void {
