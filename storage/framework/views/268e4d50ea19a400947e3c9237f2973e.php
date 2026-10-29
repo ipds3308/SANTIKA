@@ -465,7 +465,7 @@
 
         <div class="card border-0 shadow-sm bg-transparent p-0">
             
-            <form action="<?php echo e(route('pendaftaran.store')); ?>" method="POST" class="uiverse-form" id="formPendaftaran">
+            <form action="<?php echo e(route('pendaftaran.store')); ?>" method="POST" class="uiverse-form" id="formPendaftaran" novalidate>
                 <?php echo csrf_field(); ?>
 
                 <div class="d-flex justify-content-between align-items-center mb-0">
@@ -777,7 +777,7 @@
 
             tanggalKunjunganValue.value = dayButton.dataset.date;
             tanggalKunjungan.value = dateFormatter.format(new Date(`${dayButton.dataset.date}T00:00:00`));
-            markRegistrationFieldTouched('tanggal_kunjungan');
+            setRegistrationFieldError('tanggal_kunjungan', '');
             scheduleDuplicateEmailCheck();
             renderCalendar();
             closeCalendar();
@@ -932,30 +932,28 @@
         return !error;
     }
 
-    function markRegistrationFieldTouched(field) {
+    function focusRegistrationField(field) {
         const control = registrationFieldControl(field);
 
-        if (control) {
-            control.dataset.validationTouched = 'true';
+        if (!control) {
+            return;
         }
 
-        validateRegistrationField(field);
+        control.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        control.focus({ preventScroll: true });
     }
 
     function validateRegistrationForm() {
         let firstInvalidField = null;
 
         registrationFieldNames.forEach(field => {
-            const control = registrationFieldControl(field);
-            if (control) control.dataset.validationTouched = 'true';
-
             if (!validateRegistrationField(field) && firstInvalidField === null) {
                 firstInvalidField = field;
             }
         });
 
         if (firstInvalidField) {
-            registrationFieldControl(firstInvalidField)?.focus();
+            focusRegistrationField(firstInvalidField);
             return false;
         }
 
@@ -982,7 +980,7 @@
         });
 
         if (firstInvalidField) {
-            registrationFieldControl(firstInvalidField)?.focus();
+            focusRegistrationField(firstInvalidField);
         }
     }
 
@@ -997,11 +995,8 @@
         form?.querySelectorAll('[data-validate-field]').forEach(control => {
             const field = control.dataset.validateField;
 
-            control.addEventListener('blur', () => markRegistrationFieldTouched(field));
             control.addEventListener(control.tagName === 'SELECT' ? 'change' : 'input', () => {
-                if (control.dataset.validationTouched === 'true') {
-                    validateRegistrationField(field);
-                }
+                setRegistrationFieldError(field, '');
 
                 if (field === 'email') scheduleDuplicateEmailCheck();
             });
@@ -1020,12 +1015,11 @@
         window.clearTimeout(duplicateCheckTimer);
         duplicateCheckController?.abort();
         duplicateCheckController = null;
+        if (duplicateCheckResult?.alreadyRegistered) {
+            setRegistrationFieldError('email', '');
+        }
         duplicateCheckResult = null;
         setDuplicateEmailStatus('');
-
-        if (document.getElementById('inputEmail')?.dataset.validationTouched === 'true') {
-            validateRegistrationField('email');
-        }
 
         if (getRegistrationFieldError('email') || getRegistrationFieldError('tanggal_kunjungan')) {
             return;
