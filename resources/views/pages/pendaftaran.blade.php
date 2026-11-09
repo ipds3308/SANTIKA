@@ -1365,11 +1365,13 @@
         }
 
         function refreshNews() {
-            fetch("{{ route('api.berita') }}")
+            fetch("{{ route('api.berita') }}", { cache: 'no-store' })
                 .then(response => response.json())
                 .then(items => renderNews(items))
                 .catch(error => console.error('Gagal memperbarui berita:', error));
         }
+
+        window.refreshNewsTicker = refreshNews;
 
         previousButton?.addEventListener('click', function () {
             prevNews();
@@ -1393,8 +1395,8 @@
         })));
 
         startAutoRotate();
-        setInterval(refreshNews, 10000);
     });
 </script>
 
+@vite('resources/js/admin-dashboard-realtime.js')
 @endsection

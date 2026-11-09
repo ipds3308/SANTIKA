@@ -1363,11 +1363,13 @@
         }
 
         function refreshNews() {
-            fetch("<?php echo e(route('api.berita')); ?>")
+            fetch("<?php echo e(route('api.berita')); ?>", { cache: 'no-store' })
                 .then(response => response.json())
                 .then(items => renderNews(items))
                 .catch(error => console.error('Gagal memperbarui berita:', error));
         }
+
+        window.refreshNewsTicker = refreshNews;
 
         previousButton?.addEventListener('click', function () {
             prevNews();
@@ -1391,9 +1393,9 @@
         })));
 
         startAutoRotate();
-        setInterval(refreshNews, 10000);
     });
 </script>
 
+<?php echo app('Illuminate\Foundation\Vite')('resources/js/admin-dashboard-realtime.js'); ?>
 <?php $__env->stopSection(); ?>
 <?php echo $__env->make('layouts.main', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH D:\Kuliah\Magang\SANTIKA\resources\views/pages/pendaftaran.blade.php ENDPATH**/ ?>

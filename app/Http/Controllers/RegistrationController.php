@@ -245,9 +245,9 @@ class RegistrationController extends Controller
             'bulan' => 'nullable|date_format:Y-m',
             'jenis_layanan' => 'nullable|string',
             'sort' => 'nullable|in:created_at,nomor_antrian,nama',
+            'per_page' => 'nullable|in:15,30,50,all',
         ]);
 
-        $calendar = $holidayCalendar->calendar();
         $tanggal = $request->input('tanggal');
         $bulan = $request->input('bulan');
         $jenisLayanan = $request->input('jenis_layanan');
@@ -297,10 +297,26 @@ class RegistrationController extends Controller
                 break;
         }
 
-        $pendaftar = $query->get();
+        $perPage = $request->input('per_page') ?: '15';
+        $pendaftar = $perPage === 'all'
+            ? $query->get()
+            : $query->paginate((int) $perPage)->withQueryString();
+
+        if ($request->header('X-Queue-Fragment') === '1') {
+            return response()->view('pages.partials.admin-queue-table', [
+                'pendaftar' => $pendaftar,
+                'perPage' => $perPage,
+            ])
+                ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
+        }
+
+        $calendar = $holidayCalendar->calendar();
 
         return response()->view('pages.dashboard', [
             'pendaftar' => $pendaftar,
+            'perPage' => $perPage,
             'tanggal' => $tanggal,
             'bulan' => $bulan,
             'jenisLayanan' => $jenisLayanan,
@@ -865,6 +881,7 @@ class RegistrationController extends Controller
 
         $request->validate([
             'bulan' => 'nullable|date_format:Y-m',
+            'per_page' => 'nullable|in:15,30,50,all',
         ]);
 
         $bulan = $request->input('bulan');
@@ -879,7 +896,10 @@ class RegistrationController extends Controller
             }
         }
 
-        $reviews = $query->paginate(15)->withQueryString();
+        $perPage = $request->input('per_page') ?: '15';
+        $reviews = $perPage === 'all'
+            ? $query->get()
+            : $query->paginate((int) $perPage)->withQueryString();
 
         $ratingQuery = Review::query();
         if ($bulan) {
@@ -893,7 +913,14 @@ class RegistrationController extends Controller
         $averageRating = (clone $ratingQuery)->avg('rating');
         $totalReview = (clone $ratingQuery)->count();
 
-        return response()->view('pages.admin_reviews', compact('reviews', 'averageRating', 'totalReview', 'bulan'))
+        if ($request->header('X-Reviews-Fragment') === '1') {
+            return response()->view('pages.partials.admin-reviews', compact('reviews', 'averageRating', 'totalReview', 'perPage'))
+                ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
+        }
+
+        return response()->view('pages.admin_reviews', compact('reviews', 'averageRating', 'totalReview', 'bulan', 'perPage'))
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');

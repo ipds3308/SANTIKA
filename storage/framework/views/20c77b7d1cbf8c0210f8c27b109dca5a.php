@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'Panel Pengelola Antrian - SANTIKA BPS'); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -265,7 +263,7 @@
                 <form action="<?php echo e(route('admin.dashboard')); ?>" method="GET" class="row g-3 align-items-end">
                     
                     <!-- Filter Harian -->
-                    <div class="col-md-3">
+                    <div class="col-12 col-sm-6 col-lg-4">
                         <label for="tanggalPickerDisplay" class="fw-bold text-secondary small mb-1"><i class="fa fa-calendar-alt me-1"></i> Filter Tanggal:</label>
                         <div class="dashboard-date-picker" data-dashboard-date-picker data-allow-past="true" data-clearable="true">
                             <div class="dashboard-date-picker-controls">
@@ -282,13 +280,13 @@
                     </div>
 
                     <!-- Filter Bulanan (Rekapan) -->
-                    <div class="col-md-3">
+                    <div class="col-12 col-sm-6 col-lg-2">
                         <label for="bulan" class="fw-bold text-secondary small mb-1"><i class="fa fa-calendar-week me-1"></i> Filter Bulanan (Rekapan):</label>
                         <input type="month" id="bulan" name="bulan" value="<?php echo e($bulan ?? ''); ?>" class="form-control form-control-sm">
                     </div>
 
                     <!-- Sort Data -->
-                    <div class="col-md-3">
+                    <div class="col-12 col-sm-6 col-lg-2">
                         <label for="sort" class="fw-bold text-secondary small mb-1"><i class="fa fa-sort me-1"></i> Sort By / Urutkan:</label>
                         <select name="sort" id="sort" class="form-select form-select-sm">
                             <option value="nomor_antrian" <?php echo e(($sort ?? '') === 'nomor_antrian' ? 'selected' : ''); ?>>Berdasarkan Tiket</option>
@@ -297,14 +295,24 @@
                         </select>
                     </div>
 
+                    <div class="col-12 col-sm-6 col-lg-1">
+                        <label for="per_page" class="fw-bold text-secondary small mb-1"><i class="fa fa-list-ol me-1"></i> Data per halaman:</label>
+                        <select name="per_page" id="per_page" class="form-select form-select-sm">
+                            <option value="15" <?php echo e(($perPage ?? '15') === '15' ? 'selected' : ''); ?>>15</option>
+                            <option value="30" <?php echo e(($perPage ?? '15') === '30' ? 'selected' : ''); ?>>30</option>
+                            <option value="50" <?php echo e(($perPage ?? '15') === '50' ? 'selected' : ''); ?>>50</option>
+                            <option value="all" <?php echo e(($perPage ?? '15') === 'all' ? 'selected' : ''); ?>>Semua</option>
+                        </select>
+                    </div>
+
                     <input type="hidden" name="jenis_layanan" value="<?php echo e($jenisLayanan ?? ''); ?>">
 
                     <!-- Tombol Aksi Filter & Reset -->
-                    <div class="col-md-3 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary btn-sm fw-bold w-100" style="background-color: #002060; border-color: #002060;">
+                    <div class="col-12 col-sm-6 col-lg-3 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm fw-bold flex-grow-1" style="background-color: #002060; border-color: #002060;">
                             <i class="fa fa-filter me-1"></i> Terapkan
                         </button>
-                        <a href="<?php echo e(route('admin.dashboard')); ?>" class="btn btn-outline-secondary btn-sm" title="Reset Filter">
+                        <a href="<?php echo e(route('admin.dashboard')); ?>" class="btn btn-outline-secondary btn-sm flex-shrink-0" title="Reset Filter">
                             <i class="fa fa-sync-alt"></i>
                         </a>
                     </div>
@@ -637,142 +645,7 @@
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </div>
 
-        <!-- Tabel Data Pendaftar dibungkus card dan table-responsive agar rapi di HP -->
-        <div class="card border-0 shadow-sm overflow-hidden">
-            <div class="table-responsive mb-0" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                <table class="table table-hover align-middle border mb-0" style="min-width: 850px;">
-                    <thead class="table-dark" style="background-color: #002060;">
-                        <tr>
-                            <th class="py-3 px-3">No. Antrian</th>
-                            <th class="py-3">Nama Pemohon</th>
-                            <th class="py-3">Jenis Layanan</th>
-                            <th class="py-3">Info Kontak & Alamat</th>
-                            <th class="py-3 text-center">Status Layanan</th>
-                            <th class="py-2 text-center" style="width: 160px;">Aksi Petugas</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabel-pendaftar-body">
-                        <?php $__empty_1 = true; $__currentLoopData = $pendaftar; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $data): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                            <tr>
-                                <td class="fw-bold text-primary px-3" style="font-size: 1.1rem;"><?php echo e($data->nomor_antrian); ?></td>
-                                <td class="fw-bold"><?php echo e($data->nama); ?></td>
-                                
-                                <td>
-                                    <?php
-                                        $serviceMeta = \App\Models\Registration::serviceBadgeMeta($data->jenis_layanan);
-                                    ?>
-                                    <span class="badge px-2 py-1" style="<?php echo e($serviceMeta['inlineStyle']); ?>; font-size: 0.8rem; font-weight: 600;">
-                                        <?php if(str_starts_with((string) $data->jenis_layanan, 'Lainnya:')): ?>
-                                            Lainnya:<?php echo e(Str::after($data->jenis_layanan, 'Lainnya:')); ?>
-
-                                        <?php else: ?>
-                                            <?php echo e($data->jenis_layanan ?? '-'); ?>
-
-                                        <?php endif; ?>
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <div><i class="fa fa-envelope text-muted me-1" style="width: 15px;"></i> <?php echo e($data->email); ?></div>
-                                    
-                                    <!-- Nomor WhatsApp Klikabel ke wa.me -->
-                                    <?php
-                                        $phoneWa = preg_match('/^08/', $data->no_wa) ? '62' . substr($data->no_wa, 1) : $data->no_wa;
-                                    ?>
-                                    <div class="mt-1">
-                                        <a href="https://wa.me/<?php echo e($phoneWa); ?>" target="_blank" class="text-decoration-none text-dark fw-semibold" title="Chat WhatsApp">
-                                            <i class="fa-brands fa-whatsapp text-success me-1" style="width: 15px; font-size: 1rem;"></i> 
-                                            <?php echo e($data->no_wa); ?> 
-                                            <i class="fa fa-external-link-alt fa-xs text-muted ms-1"></i>
-                                        </a>
-                                    </div>
-
-                                    <div class="small text-muted mt-1 border-top pt-1"><i class="fa fa-map-marker-alt me-1" style="width: 15px;"></i> <?php echo e($data->alamat ?? 'Alamat belum diisi'); ?></div>
-                                </td>
-
-                                <td class="text-center">
-                                    <?php if($data->status == 'Menunggu'): ?>
-                                        <span class="badge bg-warning text-dark px-3 py-2">Menunggu</span>
-                                    <?php elseif($data->status == 'Dipanggil'): ?>
-                                        <span class="badge bg-info text-white px-3 py-2">Dipanggil</span>
-                                    <?php elseif($data->status == 'Tidak Hadir'): ?>
-                                        <span class="badge bg-secondary px-3 py-2">Tidak Hadir</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-success px-3 py-2">Selesai</span>
-                                    <?php endif; ?>
-                                </td>
-                                
-                                <td class="text-center px-1 py-2 align-middle" style="width: 160px; white-space: nowrap;">
-                                    <div class="d-flex justify-content-center align-items-center gap-2">
-                                        <?php if($data->status === 'Selesai'): ?>
-                                            <button type="button" class="btn btn-secondary btn-sm fw-bold px-2 py-1" disabled title="Antrian selesai dan terkunci">
-                                                <i class="fa fa-lock me-1"></i> Terkunci
-                                            </button>
-                                        <?php else: ?>
-                                            <div class="dropdown">
-                                                <button type="button" class="btn btn-primary btn-sm fw-bold px-2 py-1 dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.78rem; background-color: #0d6efd; border-color: #0d6efd;">
-                                                    <i class="fa fa-chevron-down me-1"></i> Ubah Status
-                                                </button>
-                                                <ul class="dropdown-menu shadow-lg border py-1 bg-white" style="min-width: 170px;">
-                                                    <?php if($data->status === 'Tidak Hadir'): ?>
-                                                        <!-- Jika status Tidak Hadir, tombol Panggil & Selesai terkunci, tapi bisa dikembalikan ke Menunggu -->
-                                                        <li>
-                                                            <button type="button" class="dropdown-item px-3 py-2 text-muted" disabled>
-                                                                <i class="fa fa-bullhorn me-2"></i> Panggil (Terkunci)
-                                                            </button>
-                                                        </li>
-                                                        <li>
-                                                            <button type="button" class="dropdown-item px-3 py-2 text-muted" disabled>
-                                                                <i class="fa fa-check me-2"></i> Selesai (Terkunci)
-                                                            </button>
-                                                        </li>
-                                                        <li><hr class="dropdown-divider my-1"></li>
-                                                        <li>
-                                                            <button type="button" class="dropdown-item px-3 py-2 text-warning fw-bold" data-status-action="true" data-id="<?php echo e($data->id); ?>" data-status="Menunggu">
-                                                                <i class="fa fa-undo me-2"></i> Jadikan Menunggu Lagi
-                                                            </button>
-                                                        </li>
-                                                    <?php else: ?>
-                                                        <!-- Menu normal untuk status Menunggu / Dipanggil -->
-                                                        <li>
-                                                            <button type="button" class="dropdown-item px-3 py-2" data-status-action="true" data-id="<?php echo e($data->id); ?>" data-status="Dipanggil" data-nomor-antrian="<?php echo e($data->nomor_antrian); ?>">
-                                                                <i class="fa fa-bullhorn me-2 text-info"></i> Panggil
-                                                            </button>
-                                                        </li>
-                                                        <li>
-                                                            <button type="button" class="dropdown-item px-3 py-2" data-status-action="true" data-id="<?php echo e($data->id); ?>" data-status="Selesai" data-nomor-antrian="<?php echo e($data->nomor_antrian); ?>" data-nama="<?php echo e($data->nama); ?>">
-                                                                <i class="fa fa-check me-2 text-success"></i> Selesai
-                                                            </button>
-                                                        </li>
-                                                        <li>
-                                                            <button type="button" class="dropdown-item px-3 py-2" data-status-action="true" data-id="<?php echo e($data->id); ?>" data-status="Tidak Hadir">
-                                                                <i class="fa fa-user-slash me-2 text-secondary"></i> Tidak Hadir
-                                                            </button>
-                                                        </li>
-                                                    <?php endif; ?>
-                                                </ul>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <?php if(in_array(strtolower((string) auth()->user()->role), ['admin', 'cs'], true)): ?>
-                                            <button type="button" class="btn btn-outline-warning btn-sm fw-bold px-2 py-1" style="font-size: 0.78rem;" onclick="bukaModalEdit(<?php echo e(json_encode(['id' => $data->id, 'nama' => $data->nama, 'email' => $data->email, 'no_wa' => $data->no_wa, 'alamat' => $data->alamat, 'jenis_layanan' => $data->jenis_layanan, 'tanggal_kunjungan' => $data->tanggal_kunjungan, 'nomor_antrian' => $data->nomor_antrian, 'status' => $data->status], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP)); ?>)">
-                                                <i class="fa fa-pen me-1"></i> Edit
-                                            </button>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                            <tr>
-                                <td colspan="6" class="text-center py-4 text-muted">
-                                    <i class="fa fa-info-circle me-1"></i> Tidak ada data antrian untuk filter yang dipilih.
-                                </td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <?php echo $__env->make('pages.partials.admin-queue-table', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     </div>
 </div>
 
@@ -882,23 +755,8 @@
 </div>
 <?php endif; ?>
 
-<!-- Script AJAX & Auto-Refresh Real-Time Dashboard -->
+<!-- Script AJAX dashboard -->
 <script>
-    let isAnyDropdownOpen = false;
-
-    // Lacak status dropdown secara akurat via event Bootstrap
-    document.addEventListener('shown.bs.dropdown', function (e) {
-        if (e.target.closest('#tabel-pendaftar-body')) {
-            isAnyDropdownOpen = true;
-        }
-    });
-
-    document.addEventListener('hidden.bs.dropdown', function (e) {
-        if (e.target.closest('#tabel-pendaftar-body')) {
-            isAnyDropdownOpen = false;
-        }
-    });
-
     // Inisialisasi dropdown dengan strategy 'fixed' agar tidak ke-clip oleh overflow container
     function initDropdownsFixedStrategy(root) {
         root.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(function (el) {
@@ -911,6 +769,8 @@
             });
         });
     }
+
+    window.initDropdownsFixedStrategy = initDropdownsFixedStrategy;
 
     function panggilCustomer(id, nomorAntrian) {
         fetch(`/admin/panggil/${id}`, {
@@ -933,36 +793,6 @@
             console.error('Error:', error);
             alert('Terjadi kesalahan koneksi.');
         });
-    }
-
-    function autoRefreshDashboard() {
-        // Cek 1: sebelum fetch dikirim
-        if (isAnyDropdownOpen) {
-            return;
-        }
-
-        let currentUrl = window.location.href;
-
-        fetch(currentUrl)
-            .then(response => response.text())
-            .then(html => {
-                // Cek 2: sebelum HTML diterapkan — menutup celah race condition
-                if (isAnyDropdownOpen) {
-                    return;
-                }
-
-                let parser = new DOMParser();
-                let doc = parser.parseFromString(html, 'text/html');
-                
-                let newTableBody = doc.querySelector('#tabel-pendaftar-body');
-                let currentTableBody = document.querySelector('#tabel-pendaftar-body');
-
-                if (newTableBody && currentTableBody) {
-                    currentTableBody.innerHTML = newTableBody.innerHTML;
-                    initDropdownsFixedStrategy(currentTableBody);
-                }
-            })
-            .catch(error => console.error('Gagal memperbarui data real-time:', error));
     }
 
     document.addEventListener('click', function (event) {
@@ -1002,7 +832,6 @@
         initDropdownsFixedStrategy(document.querySelector('#tabel-pendaftar-body'));
     });
 
-    setInterval(autoRefreshDashboard, 3000);
 </script>
 
 <?php if(in_array(strtolower((string) auth()->user()->role), ['admin', 'cs'], true)): ?>
@@ -1287,5 +1116,8 @@
         }
     <?php endif; ?>
 </script>
+<?php if(in_array(strtolower((string) auth()->user()->role), ['admin', 'cs'], true)): ?>
+    <?php echo app('Illuminate\Foundation\Vite')('resources/js/admin-dashboard-realtime.js'); ?>
+<?php endif; ?>
 <?php $__env->stopSection(); ?>
 <?php echo $__env->make('layouts.main', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH D:\Kuliah\Magang\SANTIKA\resources\views/pages/dashboard.blade.php ENDPATH**/ ?>

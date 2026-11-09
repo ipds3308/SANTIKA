@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -22,6 +22,7 @@ class UserController extends Controller
     {
         $this->checkAdmin();
         $users = User::orderBy('created_at', 'desc')->get();
+
         return view('pages.users', compact('users'));
     }
 
@@ -37,7 +38,7 @@ class UserController extends Controller
             // 'role' dihapus karena sudah otomatis jadi 'cs'
         ], [
             'email.unique' => 'Email ini sudah terdaftar di sistem.',
-            'password.min' => 'Password minimal harus 6 karakter.'
+            'password.min' => 'Password minimal harus 6 karakter.',
         ]);
 
         User::create([
@@ -55,17 +56,20 @@ class UserController extends Controller
     {
         $this->checkAdmin();
 
+        $validated = $request->validate([
+            'role' => ['required', 'in:admin,cs'],
+        ]);
+
         $user = User::findOrFail($id);
 
-        // Mencegah admin menurunkan rolenya sendiri menjadi CS
-        if ($user->id === Auth::id() && $request->role !== 'admin') {
-            return redirect()->back()->with('error', 'Anda tidak dapat mengubah role akun Anda sendiri menjadi CS.');
+        if ($user->role === 'admin') {
+            return redirect()->back()->with('error', 'Role administrator tidak dapat diubah melalui halaman ini.');
         }
 
-        $user->role = $request->role;
+        $user->role = $validated['role'];
         $user->save();
 
-        return redirect()->back()->with('success', 'Role pengguna ' . $user->name . ' berhasil diubah menjadi ' . strtoupper($request->role) . '.');
+        return redirect()->back()->with('success', 'Role pengguna '.$user->name.' berhasil diubah menjadi '.strtoupper($validated['role']).'.');
     }
 
     // 4. Menghapus Akun
@@ -81,6 +85,7 @@ class UserController extends Controller
         }
 
         $user->delete();
+
         return redirect()->back()->with('success', 'Akun pengguna berhasil dihapus.');
     }
 }

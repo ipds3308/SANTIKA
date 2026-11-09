@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\PreventBackHistory;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -11,6 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
+        channels: __DIR__.'/../routes/channels.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
@@ -21,11 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Menambahkan alias middleware untuk mencegah cache tombol Back browser
         $middleware->alias([
-            'prevent-back-history' => \App\Http\Middleware\PreventBackHistory::class,
+            'prevent-back-history' => PreventBackHistory::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        
+
         // Menangani error 419 Page Expired (CSRF Token Mismatch) secara mutlak
         $exceptions->render(function (TokenMismatchException $e, $request) {
             // Langsung arahkan (redirect) kembali ke halaman login dengan pesan peringatan
@@ -33,5 +35,5 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->route('login')
                 ->with('error', 'Sesi Anda telah kedaluwarsa atau Anda telah keluar dari tab lain. Silakan login kembali.');
         });
-        
+
     })->create();

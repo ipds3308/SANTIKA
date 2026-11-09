@@ -932,8 +932,9 @@
  });  
  }  
   
+ window.ambilDataRuangTunggu = ambilDataRuangTunggu;
  ambilDataRuangTunggu();
- setInterval(ambilDataRuangTunggu, 3000);  
 </script>  
+<?php echo app('Illuminate\Foundation\Vite')('resources/js/admin-dashboard-realtime.js'); ?>
 <?php $__env->stopSection(); ?>
 <?php echo $__env->make('layouts.main', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH D:\Kuliah\Magang\SANTIKA\resources\views/pages/ruang_tunggu.blade.php ENDPATH**/ ?>

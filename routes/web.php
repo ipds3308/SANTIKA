@@ -1,11 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\LoginController;
-use App\Http\Controllers\UserController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 // ==========================================
 // 1. RUTE PUBLIK (Siapa saja boleh akses)
@@ -27,9 +27,10 @@ Route::get('/api/ruang-tunggu-data', [RegistrationController::class, 'apiRuangTu
 Route::get('/api/berita', [NewsController::class, 'api'])->name('api.berita');
 
 Route::get('/session-check', function () {
-    if (!Auth::check()) {
+    if (! Auth::check()) {
         return response()->json(['authenticated' => false], 401);
     }
+
     return response()->json(['authenticated' => true], 200);
 })->name('session.check');
 
@@ -45,14 +46,14 @@ Route::get('/assets/santika-logo-hitam', function () {
     return response()->file(base_path('app/asset/LOGO SANTIKA HITAM.png'));
 })->name('assets.santika-logo-hitam');
 
-
 // ==========================================
 // 2. RUTE LOGIN ADMIN & CS
 // ==========================================
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'authenticate']);
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'authenticate']);
+});
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-
 
 // ==========================================
 // 3. RUTE ADMIN & CS TERKUNCI (Wajib Login & Anti Back-History)
@@ -60,7 +61,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::middleware(['auth', 'prevent-back-history'])->group(function () {
     // Dasbor utama
     Route::get('/admin', [RegistrationController::class, 'index'])->name('admin.dashboard');
-    
+
     // Rute Rekap Ulasan & Saran untuk Admin/CS & Export PDF Ulasan
     Route::get('/admin/ulasan', [RegistrationController::class, 'listReviews'])->name('admin.reviews');
     Route::get('/admin/ulasan/export-pdf', [RegistrationController::class, 'exportReviewsPdf'])->name('admin.reviews.exportPdf');
@@ -71,20 +72,20 @@ Route::middleware(['auth', 'prevent-back-history'])->group(function () {
     Route::post('/admin/berita', [NewsController::class, 'store'])->name('admin.news.store');
     Route::put('/berita/{id}', [NewsController::class, 'edit'])->name('news.edit');
     Route::put('/admin/berita/{id}', [NewsController::class, 'edit'])->name('admin.news.edit');
-    
+
     // Ubah status antrian (Panggil/Selesai) via Link
     Route::get('/admin/status/{id}/{status}', [RegistrationController::class, 'updateStatus'])->name('admin.status');
-    
+
     // Aksi Panggil Antrian khusus AJAX (Untuk Trigger Suara dan Monitor Ruang Tunggu)
     Route::post('/admin/panggil/{id}', [RegistrationController::class, 'panggilAntrian'])->name('admin.panggil');
-    
+
     // Edit dan hapus data (khusus Admin)
     Route::put('/admin/antrian/{id}', [RegistrationController::class, 'update'])->name('admin.update');
     Route::delete('/admin/hapus/{id}', [RegistrationController::class, 'destroy'])->name('admin.hapus');
-    
+
     // Export Excel/CSV
     Route::get('/admin/export', [RegistrationController::class, 'export'])->name('admin.export');
-    
+
     // Export Laporan Word (.doc)
     Route::get('/admin/export-word', [RegistrationController::class, 'exportWord'])->name('admin.exportWord');
 
@@ -97,7 +98,6 @@ Route::middleware(['auth', 'prevent-back-history'])->group(function () {
     Route::put('/rahasia/bps-manajemen-akun/update-role/{id}', [UserController::class, 'updateRole'])->name('admin.users.updateRole');
     Route::delete('/rahasia/bps-manajemen-akun/delete/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy');
 });
-
 
 // ==========================================
 // 4. BAWAAN LARAVEL (Inertia & Settings)

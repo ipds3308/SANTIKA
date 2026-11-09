@@ -72,11 +72,7 @@
                             <td class="text-center">
                                 <div class="d-inline-flex gap-1">
                                     <!-- Tombol Ubah Role (Memicu Modal Kustom) -->
-                                    @if($u->role == 'admin')
-                                        <button type="button" class="btn btn-outline-warning btn-sm py-1 px-2" title="Jadikan CS" onclick="bukaModalRole('{{ route('admin.users.updateRole', $u->id) }}', '{{ $u->name }}', 'cs')">
-                                            <i class="fa fa-user-slash me-1"></i> Demote ke CS
-                                        </button>
-                                    @else
+                                    @if($u->role !== 'admin')
                                         <button type="button" class="btn btn-outline-success btn-sm py-1 px-2" title="Jadikan Admin" onclick="bukaModalRole('{{ route('admin.users.updateRole', $u->id) }}', '{{ $u->name }}', 'admin')">
                                             <i class="fa fa-user-shield me-1"></i> Jadikan Admin
                                         </button>

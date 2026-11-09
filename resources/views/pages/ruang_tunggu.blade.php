@@ -932,7 +932,8 @@
  });  
  }  
   
+ window.ambilDataRuangTunggu = ambilDataRuangTunggu;
  ambilDataRuangTunggu();
- setInterval(ambilDataRuangTunggu, 3000);  
 </script>  
+@vite('resources/js/admin-dashboard-realtime.js')
 @endsection
