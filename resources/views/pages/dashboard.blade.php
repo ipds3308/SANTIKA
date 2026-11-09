@@ -1112,6 +1112,6 @@
     @endif
 </script>
 @if(in_array(strtolower((string) auth()->user()->role), ['admin', 'cs'], true))
-    @vite('resources/js/admin-dashboard-realtime.js')
+    @vite('resources/js/admin-dashboard-polling.js')
 @endif
 @endsection

@@ -2,24 +2,12 @@
 
 namespace App\Models;
 
-use App\Events\QueueUpdated;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Registration extends Model
 {
     use HasFactory;
-
-    protected static function booted(): void
-    {
-        static::saved(function (): void {
-            QueueUpdated::dispatch();
-        });
-
-        static::deleted(function (): void {
-            QueueUpdated::dispatch();
-        });
-    }
 
     // Menentukan tabel secara eksplisit (opsional tapi praktik yang baik)
     protected $table = 'registrations';

@@ -1365,8 +1365,14 @@
         }
 
         function refreshNews() {
-            fetch("{{ route('api.berita') }}", { cache: 'no-store' })
-                .then(response => response.json())
+            return fetch("{{ route('api.berita') }}", { cache: 'no-store' })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Gagal memperbarui berita: ${response.status}`);
+                    }
+
+                    return response.json();
+                })
                 .then(items => renderNews(items))
                 .catch(error => console.error('Gagal memperbarui berita:', error));
         }
@@ -1398,5 +1404,5 @@
     });
 </script>
 
-@vite('resources/js/admin-dashboard-realtime.js')
+@vite('resources/js/admin-dashboard-polling.js')
 @endsection

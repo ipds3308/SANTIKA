@@ -1,16 +1,13 @@
 <?php
 
-use App\Events\AdminReviewsUpdated;
 use App\Models\Review;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Event;
 
 uses(RefreshDatabase::class);
 
-test('new reviews broadcast an update and the admin endpoint returns only the filtered fragment', function () {
+test('admin endpoint returns only the filtered review fragment', function () {
     $admin = User::factory()->create(['role' => 'admin']);
-    Event::fake([AdminReviewsUpdated::class]);
 
     foreach (range(1, 16) as $number) {
         Review::create([
@@ -20,8 +17,6 @@ test('new reviews broadcast an update and the admin endpoint returns only the fi
             'updated_at' => now()->subMinutes($number),
         ]);
     }
-
-    Event::assertDispatched(AdminReviewsUpdated::class);
 
     $this->actingAs($admin)
         ->withHeader('X-Reviews-Fragment', '1')

@@ -69,5 +69,5 @@
     });
 
 </script>
-@vite('resources/js/admin-dashboard-realtime.js')
+@vite('resources/js/admin-dashboard-polling.js')
 @endsection

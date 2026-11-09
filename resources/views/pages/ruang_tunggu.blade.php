@@ -851,7 +851,7 @@
  waitingRoomRequestController?.abort();
  waitingRoomRequestController = new AbortController();
 
- fetch(url, { signal: waitingRoomRequestController.signal })  
+ return fetch(url, { signal: waitingRoomRequestController.signal })
  .then(async response => {
  const data = await response.json();
  if (!response.ok) {
@@ -935,5 +935,5 @@
  window.ambilDataRuangTunggu = ambilDataRuangTunggu;
  ambilDataRuangTunggu();
 </script>  
-@vite('resources/js/admin-dashboard-realtime.js')
+@vite('resources/js/admin-dashboard-polling.js')
 @endsection

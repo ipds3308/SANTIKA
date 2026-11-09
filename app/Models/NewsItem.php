@@ -2,23 +2,11 @@
 
 namespace App\Models;
 
-use App\Events\NewsUpdated;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
 class NewsItem extends Model
 {
-    protected static function booted(): void
-    {
-        static::saved(function (): void {
-            NewsUpdated::dispatch();
-        });
-
-        static::deleted(function (): void {
-            NewsUpdated::dispatch();
-        });
-    }
-
     protected $fillable = [
         'position',
         'url',

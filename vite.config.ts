@@ -8,7 +8,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/js/app.ts', 'resources/js/admin-dashboard-realtime.js'],
+            input: ['resources/js/app.ts', 'resources/js/admin-dashboard-polling.js'],
             refresh: true,
         }),
         vue({
